@@ -1,0 +1,38 @@
+{
+    "type": "FeatureCollection",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "EPSG:4326"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    
+                    127.82, 36.41
+                ]
+            },
+            "properties": {
+                "name": "地址1",
+                "description": "详情1"
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    125.82, 33.41
+                ]
+            },
+            "properties": {
+                "name": "地址2",
+                "description": "详情2"
+            }
+        }
+    ]
+}

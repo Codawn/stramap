@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="ol.css" type="text/css">
+    <style>
+      .map {
+        height: 400px;
+        width: 100%;
+      }
+    </style>
+    <script src="ol.js"></script>
+    <title>战略地图-demo20240330</title>
+  </head>
+  <body>
+    <h2>战略地图330（基于OL6-dist与Maperitive开发）</h2>
+    <h5>数据采集、瓦片加工与交互设计：王煜东</h5>
+    <div id="map" class="map"></div>
+    <script type="text/javascript">
+      var map = new ol.Map({
+        target: 'map',
+        layers: [
+          new ol.layer.Tile({
+
+
+
+            //source: new ol.source.OSM()
+            source: new ol.source.XYZ
+            ({
+              url: 'Tiles/{z}/{x}/{y}.png'
+            })
+
+
+          })
+        ],
+        view: new ol.View({
+          center: ol.proj.fromLonLat([126.82, 35.41]),
+          zoom: 8
+        })
+      });
+    </script>
+  </body>
+</html>
