@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="ol.css" type="text/css">
+    <style>
+        .map {
+            
+            /* height: 100%;*/
+            height: 800px; 
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ol-popup {
+            position: absolute;
+            min-width: 180px;
+            background-color: white;
+            -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+            filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            bottom: 12px;
+            left: -50px;
+            z-index: 1;
+        }
+
+        .ol-popup:after, .ol-popup:before {
+            top: 100%;
+            border: solid transparent;
+            content: " ";
+            height: 0;
+            width: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .ol-popup:after {
+            border-top-color: white;
+            border-width: 10px;
+            left: 48px;
+            margin-left: -10px;
+        }
+
+        .ol-popup:before {
+            border-top-color: #cccccc;
+            border-width: 11px;
+            left: 48px;
+            margin-left: -11px;
+        }
+
+        .ol-popup-closer {
+            text-decoration: none;
+            position: absolute;
+            top: 2px;
+            right: 8px;
+        }
+
+        .ol-popup-closer:after {
+    content: "✖";
+}
+    </style>
+   
+    <title>战略地图-demo202404</title>
+  </head>
+  <body>
+    <h2>支持缩放拖动与完全【本地部署】</h2>
+    <h5>数据采集、瓦片加工与交互设计：王煜东</h5>
+    <h6>2个示例特征点与信息窗已添加；扩展更大地理区域，加工设备的硬件资源受限</h6>
+
+    <div id="map" class="map"></div>
+
+    <div id="popup" class="ol-popup">
+            <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+            <div id="popup-content"></div>
+    </div>
+
+    <script src="ol.js"></script>
+    <script type="text/javascript">
+      //标记物样式
+      var styles = {
+    'Point': [new ol.style.Style({
+        image: new ol.style.Circle({
+            radius: 8,
+            fill: new ol.style.Fill({
+                color: [255, 255, 255, 0.8]
+            }),
+            stroke: new ol.style.Stroke({color: '#edd418', width: 3})
+        })
+    })],
+    'LineString': [new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'green',
+            width: 1
+        })
+    })],
+    'Polygon': [new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'blue',
+            lineDash: [4],
+            width: 3
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(0, 0, 255, 0.1)'
+        })
+    })],
+    'Circle': [new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'blue',
+            width: 2
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(0,0,255,0.8)'
+        })
+    })]
+};
+//设置标记物样式
+var styleFunction = function(feature, resolution) {
+  return styles[feature.getGeometry().getType()];
+};
+
+
+//设置嵌入式数据（避免跨域）
+
+var geojson_data ={
+    "type": "FeatureCollection",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "EPSG:4326" 
+//在 GeoJSON 数据中，坐标使用的是经纬度坐标系（EPSG:4326），而在 OpenLayers 中，通常使用的是球面墨卡托投影坐标系（EPSG:3857）。
+//camp casey 经纬度坐标应为 127.08555555555556, 37.92194444444444，修改为 37.6
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": ol.proj.fromLonLat([127.08555555555556, 37.6])
+            },
+            "properties": {
+                "name": "Camp Casey",
+                "imglink":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/2nd_Infantry_Division_SSI_%28full_color%29.svg/75px-2nd_Infantry_Division_SSI_%28full_color%29.svg.png",
+                "description": "凯西营（캠프케이시）是位于韩国东渡川的美军基地，是韩国非军事区 （DMZ） 附近的几个美国陆军基地之一。"
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": ol.proj.fromLonLat([128.416, 35.996])
+            },
+            "properties": {
+                "name": "Camp Carroll",
+                "imglink":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/IMCOMCrest3D_USAG_Daegu_current.jpg/375px-IMCOMCrest3D_USAG_Daegu_current.jpg",
+                "description": "卡罗尔营（캠프캐럴）位于韩国半岛东南部的Waegwan村，距离大邱市约20公里。仓库和地块占该地点的很大一部分，因为它的主要功能之一是存放战争储备库存。"
+            }
+        }
+    ]
+}
+
+//获取数据加载到图层
+      var geojson_layer = new ol.layer.Vector({
+    source: new ol.source.Vector({
+        //url: 'file.geojson',
+        //直接读进来
+        features: (new ol.format.GeoJSON()).readFeatures(geojson_data)
+    
+    }),
+    style: styleFunction
+});
+
+//与底图拼接
+var map = new ol.Map({
+        target: document.getElementById('map'),
+        layers: [
+          new ol.layer.Tile({
+
+
+
+            //source: new ol.source.OSM()
+            source: new ol.source.XYZ
+            ({
+              url: 'Tiles/{z}/{x}/{y}.png'
+            })
+
+
+          }),
+          geojson_layer
+        ],
+        view: new ol.View({
+          center: ol.proj.fromLonLat([126.82, 36.41]),
+          zoom: 8
+        })
+      });
+
+      //设置交互
+var
+    container = document.getElementById('popup'),
+    content_element = document.getElementById('popup-content'),
+    closer = document.getElementById('popup-closer');
+
+closer.onclick = function() {
+    overlay.setPosition(undefined);
+    closer.blur();
+    return false;
+};
+var overlay = new ol.Overlay({
+    element: container,
+    autoPan: true,
+    offset: [0, -10]
+});
+map.addOverlay(overlay);
+
+var fullscreen = new ol.control.FullScreen();
+map.addControl(fullscreen);
+
+map.on('click', function(evt){
+    var feature = map.forEachFeatureAtPixel(evt.pixel,
+      function(feature, layer) {
+        return feature;
+      });
+    if (feature) {
+        var geometry = feature.getGeometry();
+        var coord = geometry.getCoordinates();
+        
+        var content = '<h3>' + feature.get('name') + '</h3>';
+        content += '<h5>' + feature.get('description') + '</h5>';
+        content += '<img src="' + feature.get('imglink') + '" alt="徽标" width="75" height="88">';
+        
+        content_element.innerHTML = content;
+        overlay.setPosition(coord);
+        
+        console.info(feature.getProperties());
+    }
+});
+map.on('pointermove', function(e) {
+    if (e.dragging) return;
+       
+    var pixel = map.getEventPixel(e.originalEvent);
+    var hit = map.hasFeatureAtPixel(pixel);
+    
+    map.getTarget().style.cursor = hit ? 'pointer' : '';
+});
+
+
+
+    </script>
+  </body>
+</html>
